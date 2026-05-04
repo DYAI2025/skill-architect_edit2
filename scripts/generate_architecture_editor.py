@@ -89,7 +89,7 @@ ${rows.join('\n')}
 - [ ] Alle roten Abweichungen sind behoben.
 - [ ] Validation meldet "No deviations found".`}
 function exportDeviationBrief(){fileName='deviation-dev-brief.md';openModal('Deviation Development Brief',deviationBrief())}
-function draftDeviationForNode(id){let d=nodeDeviation(id);if(!d){alert('No deviation on node '+id);return;}fileName='deviation-'+id+'.md';openModal('Deviation Brief: '+id,`# Dev Brief: Deviation ${id}\n\n- Node: ${id}\n- Issue: ${d.message}\n\n## Required Fix\n- Update implementation and architecture data so expected and rendered architecture match for this node.`)}
+function draftDeviationForNode(id){let d=nodeDeviation(id);if(!d){alert('No deviation on node '+id);return;}fileName='deviation-'+id+'.md';openModal('Deviation Brief: '+id,`# Development Brief: Deviation ${id}\n\n- Node: ${id}\n- Issue: ${d.message}\n\n## Required Fix\n- Update implementation and architecture data so expected and rendered architecture match for this node.`)}
 
 function statusRank(s){return ({red:3,yellow:2,green:1,unknown:0})[s]||0}
 function worstStatus(list){let w='unknown';(list||[]).forEach(x=>{let s=String(x?.status||'unknown').toLowerCase();if(statusRank(s)>statusRank(w))w=s});return w}
