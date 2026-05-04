@@ -137,6 +137,12 @@ function evaluateAutoImprove(){
   };
   return {allowed:true,suggestion};
 }
+function architectureSignature(){
+  let nodes=(model.nodes||[]).filter(n=>!n._deleted).map(n=>n.id).sort();
+  let edges=(model.edges||[]).map(e=>e.from+'->'+e.to).sort();
+  let userChanges=(model.changes||[]).filter(c=>c.origin==='user-edit').length;
+  return JSON.stringify({nodes,edges,userChanges});
+}
 function triggerAutoImprove(){
   let result=evaluateAutoImprove();
   if(!result.allowed){alert(result.reason);return}
@@ -145,13 +151,24 @@ function triggerAutoImprove(){
   let suggestion=result.suggestion;
   suggestion.devBriefId=briefId;
   suggestion.status='proposed';
+  suggestion.guard={signatureAtProposal:architectureSignature(),userChangeCountAtProposal:(model.changes||[]).filter(c=>c.origin==='user-edit').length};
   ai.pending=suggestion;
   change({type:'auto-improve-proposed',target:'strategy',origin:'system',after:suggestion,description:'Auto-improve proposal generated: '+suggestion.title});
   openModal('Auto-Improve Proposal',formatAutoImproveProposal(suggestion));
 }
 function confirmAutoImprove(){
   let ai=model.autoImprove||{}; if(!ai.pending){alert('No auto-improve proposal to confirm.');return}
-  let confirmed={...ai.pending,devBriefId:ai.pending.devBriefId||currentDevBriefId(),status:'confirmed',confirmedAt:now()};
+  let pending=ai.pending;
+  let nowSignature=architectureSignature();
+  if(pending.guard&&pending.guard.signatureAtProposal!==nowSignature){
+    alert('Confirmation blocked: architecture changed after proposal creation. Re-run AUTO-IMPROVE to avoid contradictions.');
+    return;
+  }
+  if(hasSessionUserChanges()){
+    alert('Confirmation blocked: user-edit changes exist in this session. Auto-improve must run on an unchanged architecture state.');
+    return;
+  }
+  let confirmed={...pending,devBriefId:pending.devBriefId||currentDevBriefId(),status:'confirmed',confirmedAt:now()};
   ai.history=ai.history||[]; ai.history.push(confirmed); delete ai.pending;
   model.devBriefs=model.devBriefs||[];
   model.devBriefs.push({id:'brief-'+Math.random().toString(36).slice(2,8),createdAt:now(),source:'auto-improve',title:confirmed.title,content:formatAutoImproveDevBrief(confirmed)});
