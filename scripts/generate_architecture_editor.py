@@ -157,8 +157,8 @@ function architectureSignature(){
   let edges=(model.edges||[])
     .map(e=>normalizeForSignature(e))
     .sort((a,b)=>{
-      let ak=[a.from,a.to,a.relation,a.style,a.label].map(x=>String(x||'')).join('|');
-      let bk=[b.from,b.to,b.relation,b.style,b.label].map(x=>String(x||'')).join('|');
+      let ak=JSON.stringify(a);
+      let bk=JSON.stringify(b);
       return ak.localeCompare(bk);
     });
   let userChanges=(model.changes||[]).filter(c=>c.origin==='user-edit').length;
