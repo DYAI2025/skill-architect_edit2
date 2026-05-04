@@ -98,8 +98,8 @@ function hasSessionUserChanges(){return (model.changes||[]).some(c=>c.origin==='
 function currentDevBriefId(){return model.project?.activeDevBriefId||'default-brief'}
 function pendingAutoImproveMatchesBrief(pending,briefId){
   if(!pending)return false;
-  // Legacy proposals can miss devBriefId; treat them as the current brief to avoid duplicate prompts.
-  let pendingBriefId=pending.devBriefId||briefId;
+  // Legacy proposals can have null/undefined devBriefId; treat only those as the current brief to avoid duplicate prompts.
+  let pendingBriefId=pending.devBriefId??briefId;
   return pendingBriefId===briefId;
 }
 function historyAutoImproveMatchesBrief(history,briefId){return (history||[]).some(h=>h.devBriefId===briefId)}
