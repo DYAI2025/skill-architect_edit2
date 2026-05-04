@@ -137,9 +137,30 @@ function evaluateAutoImprove(){
   };
   return {allowed:true,suggestion};
 }
+function normalizeForSignature(value){
+  if(Array.isArray(value))return value.map(normalizeForSignature);
+  if(value&&typeof value==='object'){
+    let out={};
+    Object.keys(value).sort().forEach(k=>{
+      if(k.startsWith('_'))return;
+      out[k]=normalizeForSignature(value[k]);
+    });
+    return out;
+  }
+  return value;
+}
 function architectureSignature(){
-  let nodes=(model.nodes||[]).filter(n=>!n._deleted).map(n=>n.id).sort();
-  let edges=(model.edges||[]).map(e=>e.from+'->'+e.to).sort();
+  let nodes=(model.nodes||[])
+    .filter(n=>!n._deleted)
+    .map(n=>normalizeForSignature(n))
+    .sort((a,b)=>String(a.id||'').localeCompare(String(b.id||'')));
+  let edges=(model.edges||[])
+    .map(e=>normalizeForSignature(e))
+    .sort((a,b)=>{
+      let ak=[a.from,a.to,a.relation,a.style,a.label].map(x=>String(x||'')).join('|');
+      let bk=[b.from,b.to,b.relation,b.style,b.label].map(x=>String(x||'')).join('|');
+      return ak.localeCompare(bk);
+    });
   let userChanges=(model.changes||[]).filter(c=>c.origin==='user-edit').length;
   return JSON.stringify({nodes,edges,userChanges});
 }
