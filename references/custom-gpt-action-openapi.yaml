@@ -1,0 +1,213 @@
+openapi: 3.1.0
+info:
+  title: Architecture Live API Health Check
+  version: 1.0.0
+  description: Probe architecture endpoints and service-to-service flows, then return red, yellow, green, or unknown status for nodes, endpoint rows, and edges.
+servers:
+  - url: https://your-healthcheck-server.example.com
+    description: Replace this URL with the HTTPS base URL of the deployed health-check server.
+paths:
+  /probe-architecture:
+    post:
+      operationId: probeArchitectureHealth
+      summary: Probe endpoints and architecture flows from an architecture model
+      description: Calls submitted endpoint and flow checks through the server-side allowlist and returns status colors for the generated architecture HTML editor.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProbeArchitectureRequest'
+      responses:
+        '200':
+          description: Probe results grouped by node, endpoint, and service-to-service edge.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProbeArchitectureResponse'
+        '400':
+          description: Invalid request.
+        '401':
+          description: Missing or invalid bearer token.
+        '403':
+          description: Target host is not allowed.
+        '502':
+          description: Probe execution failed unexpectedly.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    ProbeArchitectureRequest:
+      type: object
+      additionalProperties: true
+      required: [checks]
+      properties:
+        project:
+          type: object
+          additionalProperties: true
+        nodes:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        edges:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        flows:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArchitectureFlow'
+        checks:
+          type: array
+          items:
+            $ref: '#/components/schemas/EndpointCheck'
+    ArchitectureFlow:
+      type: object
+      required: [source, target, method, path]
+      additionalProperties: true
+      properties:
+        source:
+          type: string
+        target:
+          type: string
+        method:
+          type: string
+          enum: [GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS]
+        path:
+          type: string
+        description:
+          type: string
+        critical:
+          type: boolean
+    EndpointCheck:
+      type: object
+      required: [nodeId, endpointIndex, method]
+      additionalProperties: true
+      properties:
+        nodeId:
+          type: string
+        endpointIndex:
+          type: integer
+          minimum: 0
+        source:
+          type: string
+        target:
+          type: string
+        flowIndex:
+          type: integer
+          minimum: 0
+        critical:
+          type: boolean
+        description:
+          type: string
+        method:
+          type: string
+          enum: [GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS]
+        path:
+          type: string
+        url:
+          type: string
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        query:
+          type: object
+          additionalProperties: true
+        body: {}
+        expectedStatus:
+          type: array
+          items:
+            type: integer
+        expectedResponse:
+          type: object
+          additionalProperties: true
+          properties:
+            requiredJsonPaths:
+              type: array
+              items:
+                type: string
+    ProbeArchitectureResponse:
+      type: object
+      required: [timestamp, summary, nodes]
+      additionalProperties: true
+      properties:
+        timestamp:
+          type: string
+        summary:
+          $ref: '#/components/schemas/HealthSummary'
+        nodes:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/NodeHealth'
+        edges:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/EdgeHealth' 
+    EdgeHealth:
+      type: object
+      required: [status, summary, flows]
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum: [green, yellow, red, unknown]
+        summary:
+          type: string
+        flows:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    HealthSummary:
+      type: object
+      required: [status]
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum: [green, yellow, red, unknown]
+        green:
+          type: integer
+        yellow:
+          type: integer
+        red:
+          type: integer
+        unknown:
+          type: integer
+    NodeHealth:
+      type: object
+      required: [status, endpoints]
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum: [green, yellow, red, unknown]
+        summary:
+          type: string
+        endpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/EndpointHealth'
+    EndpointHealth:
+      type: object
+      required: [status, summary]
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum: [green, yellow, red, unknown]
+        summary:
+          type: string
+        httpStatus:
+          type: integer
+        latencyMs:
+          type: integer
+        error:
+          type: string

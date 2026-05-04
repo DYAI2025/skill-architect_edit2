@@ -1,0 +1,151 @@
+{
+  "project": {
+    "name": "Sample Agent Architecture",
+    "domain": "agent",
+    "repo": "",
+    "timestamp": "2026-05-01T00:00:00+02:00",
+    "description": "Minimal example architecture for the Omni Architecture Brief Engine."
+  },
+  "nodes": [
+    {
+      "id": "user-intake",
+      "x": 220,
+      "y": 220,
+      "type": "entry",
+      "icon": "◎",
+      "label": "User Intake",
+      "sub": "prompt + files",
+      "detail": {
+        "title": "User Intake",
+        "subtitle": "entry · request normalization",
+        "tags": [
+          "entry",
+          "agent"
+        ],
+        "flow": [
+          "Receive user request",
+          "Extract intent, inputs, constraints",
+          "Create normalized task frame"
+        ],
+        "apis": [],
+        "schemas": [],
+        "notes": "Entry point for the architecture workflow.",
+        "constraints": [
+          "Do not drop user constraints"
+        ],
+        "risks": [
+          "Ambiguous scope may create wrong architecture model"
+        ]
+      }
+    },
+    {
+      "id": "architecture-modeler",
+      "x": 560,
+      "y": 220,
+      "type": "agent",
+      "icon": "◇",
+      "label": "Modeler",
+      "sub": "nodes + edges",
+      "detail": {
+        "title": "Architecture Modeler",
+        "subtitle": "agent · canonical model",
+        "tags": [
+          "agent",
+          "model"
+        ],
+        "flow": [
+          "Identify components",
+          "Identify relationships",
+          "Emit architecture.json"
+        ],
+        "apis": [],
+        "schemas": [],
+        "notes": "Produces the normalized model used by the editor.",
+        "constraints": [
+          "IDs must be stable"
+        ],
+        "risks": []
+      }
+    },
+    {
+      "id": "brief-exporter",
+      "x": 900,
+      "y": 220,
+      "type": "service",
+      "icon": "▣",
+      "label": "Brief Exporter",
+      "sub": "markdown handoff",
+      "detail": {
+        "title": "Markdown Brief Exporter",
+        "subtitle": "service · dev handoff",
+        "tags": [
+          "markdown",
+          "dev-brief"
+        ],
+        "flow": [
+          "Read changes",
+          "Group by target",
+          "Generate surgical implementation brief"
+        ],
+        "apis": [
+          {
+            "method": "POST",
+            "path": "/internal/export/dev-brief",
+            "desc": "Generate a development brief from architecture changes.",
+            "params": [
+              "model: architecture model",
+              "changes: change log"
+            ],
+            "requestSchema": {
+              "type": "object"
+            },
+            "responseSchema": {
+              "type": "object",
+              "properties": {
+                "markdown": {
+                  "type": "string"
+                }
+              }
+            },
+            "consumers": [
+              "architecture-editor"
+            ],
+            "auth": "internal",
+            "status": "planned"
+          }
+        ],
+        "schemas": [],
+        "notes": "Markdown output should be directly usable by a coding agent.",
+        "constraints": [
+          "No vague implementation instructions"
+        ],
+        "risks": []
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "user-intake",
+      "to": "architecture-modeler",
+      "style": "primary",
+      "label": "normalizes",
+      "relation": "workflow",
+      "protocol": "internal",
+      "data": "task frame"
+    },
+    {
+      "from": "architecture-modeler",
+      "to": "brief-exporter",
+      "style": "primary",
+      "label": "calls export API",
+      "relation": "api-call",
+      "protocol": "HTTP",
+      "data": "architecture model + change log",
+      "method": "POST",
+      "path": "/internal/export/dev-brief",
+      "description": "Submits architecture model and change log for markdown export",
+      "critical": true
+    }
+  ],
+  "changes": []
+}
