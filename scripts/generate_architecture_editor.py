@@ -72,9 +72,7 @@ function expectedById(){return Object.fromEntries((model.expectedArchitecture?.n
 function nodeDeviation(id){let d=model.deviations?.nodes?.[id];return d&&d.status==='red'?d:null}
 function edgeDeviation(e){let k=e.from+'->'+e.to;let d=model.deviations?.edges?.[k];return d&&d.status==='red'}
 function validateArchitecture(){let expected=model.expectedArchitecture;if(!expected||!Array.isArray(expected.nodes)){alert('No expectedArchitecture baseline found in model. Add model.expectedArchitecture first.');return}let actual=Object.fromEntries((model.nodes||[]).filter(n=>!n._deleted).map(n=>[n.id,n]));let exp=Object.fromEntries((expected.nodes||[]).map(n=>[n.id,n]));let dev={nodes:{},edges:{},summary:{}};Object.keys(exp).forEach(id=>{if(!actual[id])dev.nodes[id]={status:'red',message:'Expected node missing in rendered architecture.'};else{let dif=[];if(exp[id].type&&actual[id].type!==exp[id].type)dif.push('type expected '+exp[id].type+' but got '+actual[id].type);let eApis=(exp[id].detail?.apis||[]).map(a=>String(a.method||'GET').toUpperCase()+' '+String(a.path||''));let aApis=(actual[id].detail?.apis||[]).map(a=>String(a.method||'GET').toUpperCase()+' '+String(a.path||''));eApis.forEach(ep=>{if(!aApis.includes(ep))dif.push('missing endpoint '+ep)});if(dif.length)dev.nodes[id]={status:'red',message:dif.join('; ')}}});Object.keys(actual).forEach(id=>{if(!exp[id])dev.nodes[id]={status:'red',message:'Unexpected node exists in rendered architecture.'}});let expEdges=new Set((expected.edges||[]).map(e=>e.from+'->'+e.to));let actEdges=new Set((model.edges||[]).map(e=>e.from+'->'+e.to));expEdges.forEach(k=>{if(!actEdges.has(k))dev.edges[k]={status:'red',message:'Expected edge missing: '+k}});actEdges.forEach(k=>{if(!expEdges.has(k))dev.edges[k]={status:'red',message:'Unexpected edge exists: '+k}});let total=Object.keys(dev.nodes).length+Object.keys(dev.edges).length;dev.summary={status:total?'red':'green',deviationCount:total,message:total?'Architecture deviations found: '+total:'No deviations found'};model.deviations=dev;change({type:'validate',target:'architecture',after:dev,description:'Validated expected architecture vs rendered architecture'});alert(dev.summary.message)}
-function deviationBrief(){let d=model.deviations||{},n=d.nodes||{},e=d.edges||{};let rows=[];Object.entries(n).forEach(([id,v])=>rows.push(`- Node ${id}: ${v.message}`));Object.entries(e).forEach(([id,v])=>rows.push(`- Edge ${id}: ${v.message}`));if(!rows.length)return '# Development Brief: No Deviations
-
-No deviations available.';return `# Development Brief: Architekturabweichungen
+function deviationBrief(){let d=model.deviations||{},n=d.nodes||{},e=d.edges||{};let rows=[];Object.entries(n).forEach(([id,v])=>rows.push(`- Node ${id}: ${v.message}`));Object.entries(e).forEach(([id,v])=>rows.push(`- Edge ${id}: ${v.message}`));if(!rows.length)return `# Development Brief: No Deviations\n\nNo deviations available.`;return `# Development Brief: Architekturabweichungen
 
 ## Zusammenfassung
 ${d.summary?.message||''}
@@ -91,13 +89,7 @@ ${rows.join('\n')}
 - [ ] Alle roten Abweichungen sind behoben.
 - [ ] Validation meldet "No deviations found".`}
 function exportDeviationBrief(){fileName='deviation-dev-brief.md';openModal('Deviation Development Brief',deviationBrief())}
-function draftDeviationForNode(id){let d=nodeDeviation(id);if(!d){alert('No deviation on node '+id);return;}fileName='deviation-'+id+'.md';openModal('Deviation Brief: '+id,`# Dev Brief: Deviation ${id}
-
-- Node: ${id}
-- Issue: ${d.message}
-
-## Required Fix
-- Update implementation and architecture data so expected and rendered architecture match for this node.`)}
+function draftDeviationForNode(id){let d=nodeDeviation(id);if(!d){alert('No deviation on node '+id);return;}fileName='deviation-'+id+'.md';openModal('Deviation Brief: '+id,`# Dev Brief: Deviation ${id}\n\n- Node: ${id}\n- Issue: ${d.message}\n\n## Required Fix\n- Update implementation and architecture data so expected and rendered architecture match for this node.`)}
 
 function statusRank(s){return ({red:3,yellow:2,green:1,unknown:0})[s]||0}
 function worstStatus(list){let w='unknown';(list||[]).forEach(x=>{let s=String(x?.status||'unknown').toLowerCase();if(statusRank(s)>statusRank(w))w=s});return w}
