@@ -44,7 +44,7 @@ def load_model(path: str | None) -> dict[str, Any]:
 
 HTML = r'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>__TITLE__ · Architecture Editor</title><style>
 body{margin:0;background:#08090d;color:#f0e6c8;font-family:ui-monospace,Menlo,Consolas,monospace;overflow:hidden}header{position:fixed;top:0;left:0;right:0;height:58px;display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:#08090df7;border-bottom:1px solid #c9a84c44;z-index:5}h1{font-size:15px;color:#c9a84c;margin:0}button{background:#111827;color:#f0e6c8;border:1px solid #c9a84c66;border-radius:5px;padding:6px 9px;margin:2px;cursor:pointer}button:hover{color:#e8c97a;border-color:#e8c97a}#canvas{position:fixed;inset:58px 380px 0 0;overflow:auto}#scene{position:relative;width:1600px;height:1000px}svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.node{position:absolute;transform:translate(-50%,-50%);min-width:130px;background:#111827ee;border:1px solid #c9a84c66;border-radius:8px;padding:10px;text-align:center;cursor:pointer}.node:hover,.active{border-color:#e8c97a}.node.health-green{border-color:#2dff7a;background:#10251bee}.node.health-yellow{border-color:#ffd35a;background:#2b2410ee}.node.health-red{border-color:#ff5c5c;background:#2b1010ee}.node.health-unknown{border-color:#8a7f9a}.status{display:inline-block;border-radius:99px;padding:2px 7px;margin:2px;font-size:11px}.status.green{background:#12351f;color:#7dffab}.status.yellow{background:#3a2d08;color:#ffe08a}.status.red{background:#3a1111;color:#ff9a9a}.status.unknown{background:#24202d;color:#c8bfd8}.modified:after{content:'●';position:absolute;right:5px;top:3px;color:#c9a84c}.deleted{opacity:.4;text-decoration:line-through}.icon{font-size:21px;display:block}.sub{display:block;color:#8a7f9a;font-size:11px}#panel{position:fixed;right:0;top:58px;bottom:0;width:380px;background:#0d0f16f8;border-left:1px solid #c9a84c44;overflow:auto;padding:14px}.card{border-bottom:1px solid #ffffff18;padding:10px 0}.tag{display:inline-block;border:1px solid #77a7ff77;border-radius:99px;padding:2px 6px;margin:2px;font-size:11px}textarea,input,select{width:100%;box-sizing:border-box;background:#08090d;color:#f0e6c8;border:1px solid #c9a84c55;border-radius:5px;padding:6px;margin:4px 0 8px}textarea{min-height:90px}#modal{display:none;position:fixed;inset:7%;background:#08090d;border:1px solid #c9a84c77;z-index:10;box-shadow:0 0 80px #000}#modal.open{display:flex;flex-direction:column}#modal textarea{flex:1;border:0;border-top:1px solid #ffffff22;border-radius:0;margin:0;padding:16px;white-space:pre}.row{border:1px solid #ffffff18;border-radius:6px;padding:7px;margin:6px 0}.muted{color:#8a7f9a;font-size:12px}.legend{position:fixed;left:14px;bottom:14px;background:#0d0f16f2;border:1px solid #c9a84c66;border-radius:8px;padding:10px;z-index:6;min-width:280px}.legend h3{margin:0 0 6px 0;font-size:13px;color:#e8c97a}.legend-item{display:flex;align-items:center;gap:8px;font-size:12px;margin:4px 0}.line-sample{width:36px;height:0;border-top:2px solid #c9a84c99}.line-sample.dashed{border-top-style:dashed}.line-sample.primary{border-top-color:#77a7ffcc}.line-sample.secondary{border-top-color:#c9a84c99}.line-sample.event{border-top-color:#b68cffcc}.node.deviation{border-color:#ff5c5c!important;box-shadow:0 0 0 2px #ff5c5c55}.deviation-note{margin-top:8px;padding:8px;border:1px solid #ff5c5c77;background:#2b1010aa;border-radius:6px}.deviation-edge{stroke:#ff5c5c!important;stroke-width:2.2!important}.deviation-badge{display:inline-block;margin-left:6px;padding:2px 6px;border:1px solid #ff5c5c77;border-radius:99px;color:#ffb3b3;font-size:10px}</style></head><body>
-<header><div><h1 id="title"></h1><div class="muted">editable architecture → dev brief → full snapshot</div></div><div><button onclick="toggleEdit()" id="editBtn">EDIT MODE</button><button onclick="addNode()">ADD NODE</button><button onclick="saveLocal()">SAVE</button><button onclick="loadLocal()">LOAD</button><button onclick="downloadJSON()">EXPORT DATA</button><button onclick="runHealthCheck()">CHECK LIVE API</button><button onclick="validateArchitecture()">VALIDATE ARCH</button><button onclick="exportDeviationBrief()">EXPORT DEVIATIONS</button><button onclick="showBrief()">EXPORT CHANGES</button><button onclick="showSnapshot()">EXPORT ALL STATES</button></div></header>
+<header><div><h1 id="title"></h1><div class="muted">editable architecture → dev brief → full snapshot</div></div><div><button onclick="toggleEdit()" id="editBtn">EDIT MODE</button><button onclick="addNode()">ADD NODE</button><button onclick="saveLocal()">SAVE</button><button onclick="loadLocal()">LOAD</button><button onclick="downloadJSON()">EXPORT DATA</button><button onclick="runHealthCheck()">CHECK LIVE API</button><button onclick="validateArchitecture()">VALIDATE ARCH</button><button onclick="exportDeviationBrief()">EXPORT DEVIATIONS</button><button onclick="triggerAutoImprove()">AUTO-IMPROVE</button><button onclick="confirmAutoImprove()">CONFIRM AI</button><button onclick="showBrief()">EXPORT CHANGES</button><button onclick="showSnapshot()">EXPORT ALL STATES</button></div></header>
 <div id="canvas"><div id="scene"><svg id="lines"></svg></div></div><div class="legend"><h3>Legend</h3><div class="legend-item"><span class="line-sample primary"></span>Primary API / critical flow</div><div class="legend-item"><span class="line-sample secondary"></span>Dependency / relation</div><div class="legend-item"><span class="line-sample dashed"></span>API/Event/Data logical link</div><div class="legend-item"><span class="line-sample event dashed"></span>Event stream / async</div><div class="legend-item"><span class="status green">GREEN</span>Healthy</div><div class="legend-item"><span class="status yellow">YELLOW</span>Partial issue</div><div class="legend-item"><span class="status red">RED</span>Broken or deviation</div><div class="legend-item"><span class="status unknown">UNKNOWN</span>Not checked</div></div><aside id="panel">Select a node.</aside><div id="modal"><header style="position:static"><h1 id="modalTitle"></h1><div><button onclick="copyModal()">COPY</button><button onclick="downloadModal()">DOWNLOAD</button><button onclick="closeModal()">CLOSE</button></div></header><textarea id="modalText"></textarea></div>
 <script id="data" type="application/json">__MODEL_JSON__</script><script>
 let model=JSON.parse(data.textContent),map={},active=null,edit=false,fileName='architecture.md';
@@ -59,13 +59,13 @@ function openNode(id){active=id;let n=map[id],d=n.detail||{},h=nodeHealth(id);pa
 function toggleEdit(){edit=!edit;editBtn.textContent=edit?'EDIT MODE ON':'EDIT MODE';render()}
 function form(h){panel.insertAdjacentHTML('afterbegin',`<div class="card">${h}</div>`)}
 function editNode(){let n=map[active],d=n.detail;form(`<input id=f_label value="${E(n.label)}"><input id=f_sub value="${E(n.sub)}"><input id=f_title value="${E(d.title)}"><input id=f_subtitle value="${E(d.subtitle)}"><textarea id=f_notes>${E(d.notes||'')}</textarea><input id=f_tags value="${E((d.tags||[]).join(', '))}"><button onclick="saveNode()">SAVE</button>`)}
-function saveNode(){let n=map[active],before=JSON.parse(JSON.stringify(n));n.label=f_label.value;n.sub=f_sub.value;n.detail.title=f_title.value;n.detail.subtitle=f_subtitle.value;n.detail.notes=f_notes.value;n.detail.tags=f_tags.value.split(',').map(x=>x.trim()).filter(Boolean);change({type:'modify',target:'node',nodeId:active,before,after:JSON.parse(JSON.stringify(n)),description:'Modified node '+active})}
-function addFlow(){form(`<textarea id=f_flow></textarea><button onclick="saveNewFlow()">ADD</button>`)}function saveNewFlow(){let n=map[active];n.detail.flow=n.detail.flow||[];n.detail.flow.push(f_flow.value);change({type:'add',target:'flow',nodeId:active,after:f_flow.value,description:'Added flow step to '+active})}
-function editFlow(i){form(`<textarea id=f_flow>${E(map[active].detail.flow[i])}</textarea><button onclick="saveFlow(${i})">SAVE</button>`)}function saveFlow(i){let n=map[active],before=n.detail.flow[i];n.detail.flow[i]=f_flow.value;change({type:'modify',target:'flow',nodeId:active,before,after:f_flow.value,description:'Modified flow step '+(i+1)+' of '+active})}function deleteFlow(i){let n=map[active],before=n.detail.flow.splice(i,1)[0];change({type:'delete',target:'flow',nodeId:active,before,description:'Deleted flow step from '+active})}
+function saveNode(){let n=map[active],before=JSON.parse(JSON.stringify(n));n.label=f_label.value;n.sub=f_sub.value;n.detail.title=f_title.value;n.detail.subtitle=f_subtitle.value;n.detail.notes=f_notes.value;n.detail.tags=f_tags.value.split(',').map(x=>x.trim()).filter(Boolean);change({type:'modify',target:'node',origin:'user-edit',nodeId:active,before,after:JSON.parse(JSON.stringify(n)),description:'Modified node '+active})}
+function addFlow(){form(`<textarea id=f_flow></textarea><button onclick="saveNewFlow()">ADD</button>`)}function saveNewFlow(){let n=map[active];n.detail.flow=n.detail.flow||[];n.detail.flow.push(f_flow.value);change({type:'add',target:'flow',origin:'user-edit',nodeId:active,after:f_flow.value,description:'Added flow step to '+active})}
+function editFlow(i){form(`<textarea id=f_flow>${E(map[active].detail.flow[i])}</textarea><button onclick="saveFlow(${i})">SAVE</button>`)}function saveFlow(i){let n=map[active],before=n.detail.flow[i];n.detail.flow[i]=f_flow.value;change({type:'modify',target:'flow',origin:'user-edit',nodeId:active,before,after:f_flow.value,description:'Modified flow step '+(i+1)+' of '+active})}function deleteFlow(i){let n=map[active],before=n.detail.flow.splice(i,1)[0];change({type:'delete',target:'flow',origin:'user-edit',nodeId:active,before,description:'Deleted flow step from '+active})}
 function apiEditor(a={method:'GET',path:'',desc:'',params:[]},cb='saveNewApi()'){form(`<select id=f_method>${['GET','POST','PUT','PATCH','DELETE'].map(m=>`<option ${m===a.method?'selected':''}>${m}</option>`).join('')}</select><input id=f_path value="${E(a.path)}" placeholder="/api/path"><textarea id=f_desc>${E(a.desc||'')}</textarea><textarea id=f_params>${E((a.params||[]).join('\n'))}</textarea><button onclick="${cb}">SAVE</button>`)}
-function readApi(){return{method:f_method.value,path:f_path.value,desc:f_desc.value,params:f_params.value.split('\n').map(x=>x.trim()).filter(Boolean)}}function addApi(){apiEditor()}function saveNewApi(){let n=map[active],a=readApi();n.detail.apis=n.detail.apis||[];n.detail.apis.push(a);change({type:'add',target:'api',nodeId:active,after:a,description:'Added API '+a.method+' '+a.path+' to '+active})}function editApi(i){apiEditor(map[active].detail.apis[i],`saveApi(${i})`)}function saveApi(i){let n=map[active],before=JSON.parse(JSON.stringify(n.detail.apis[i])),a=readApi();n.detail.apis[i]=a;change({type:'modify',target:'api',nodeId:active,before,after:a,description:'Modified API '+before.method+' '+before.path+' to '+a.method+' '+a.path})}function deleteApi(i){let n=map[active],before=n.detail.apis.splice(i,1)[0];change({type:'delete',target:'api',nodeId:active,before,description:'Deleted API '+before.method+' '+before.path+' from '+active})}
-function addNode(){let id=prompt('New node id in kebab-case');if(!id||map[id])return;let n={id,x:250+model.nodes.length*60,y:480,type:'custom',icon:'◇',label:id,sub:'',detail:{title:id,subtitle:'custom',tags:[],flow:[],apis:[],schemas:[],notes:'',constraints:[],risks:[]}};model.nodes.push(n);change({type:'add',target:'node',nodeId:id,after:n,description:'Added node '+id})}function deleteNode(){let n=map[active],before=JSON.parse(JSON.stringify(n));n._deleted=true;change({type:'delete',target:'node',nodeId:active,before,description:'Marked node '+active+' for deletion'})}
-function addEdge(){let to=prompt('Target node id');if(!to||!map[to])return;let e={from:active,to,style:'secondary',relation:'dependency',label:''};model.edges.push(e);change({type:'add',target:'edge',nodeId:active,after:e,description:'Added edge '+active+' to '+to})}function rerouteEdge(i){let e=model.edges[i],to=prompt('New target node id',e.to);if(!to||!map[to])return;let before=JSON.parse(JSON.stringify(e));e.to=to;change({type:'reroute',target:'edge',edgeIndex:i,nodeId:active,before,after:JSON.parse(JSON.stringify(e)),description:'Rerouted edge '+before.from+' to '+before.to+' into '+e.from+' to '+e.to})}function deleteEdge(i){let before=model.edges.splice(i,1)[0];change({type:'delete',target:'edge',edgeIndex:i,before,description:'Deleted edge '+before.from+' to '+before.to})}
+function readApi(){return{method:f_method.value,path:f_path.value,desc:f_desc.value,params:f_params.value.split('\n').map(x=>x.trim()).filter(Boolean)}}function addApi(){apiEditor()}function saveNewApi(){let n=map[active],a=readApi();n.detail.apis=n.detail.apis||[];n.detail.apis.push(a);change({type:'add',target:'api',origin:'user-edit',nodeId:active,after:a,description:'Added API '+a.method+' '+a.path+' to '+active})}function editApi(i){apiEditor(map[active].detail.apis[i],`saveApi(${i})`)}function saveApi(i){let n=map[active],before=JSON.parse(JSON.stringify(n.detail.apis[i])),a=readApi();n.detail.apis[i]=a;change({type:'modify',target:'api',origin:'user-edit',nodeId:active,before,after:a,description:'Modified API '+before.method+' '+before.path+' to '+a.method+' '+a.path})}function deleteApi(i){let n=map[active],before=n.detail.apis.splice(i,1)[0];change({type:'delete',target:'api',origin:'user-edit',nodeId:active,before,description:'Deleted API '+before.method+' '+before.path+' from '+active})}
+function addNode(){let id=prompt('New node id in kebab-case');if(!id||map[id])return;let n={id,x:250+model.nodes.length*60,y:480,type:'custom',icon:'◇',label:id,sub:'',detail:{title:id,subtitle:'custom',tags:[],flow:[],apis:[],schemas:[],notes:'',constraints:[],risks:[]}};model.nodes.push(n);change({type:'add',target:'node',origin:'user-edit',nodeId:id,after:n,description:'Added node '+id})}function deleteNode(){let n=map[active],before=JSON.parse(JSON.stringify(n));n._deleted=true;change({type:'delete',target:'node',origin:'user-edit',nodeId:active,before,description:'Marked node '+active+' for deletion'})}
+function addEdge(){let to=prompt('Target node id');if(!to||!map[to])return;let e={from:active,to,style:'secondary',relation:'dependency',label:''};model.edges.push(e);change({type:'add',target:'edge',origin:'user-edit',nodeId:active,after:e,description:'Added edge '+active+' to '+to})}function rerouteEdge(i){let e=model.edges[i],to=prompt('New target node id',e.to);if(!to||!map[to])return;let before=JSON.parse(JSON.stringify(e));e.to=to;change({type:'reroute',target:'edge',origin:'user-edit',edgeIndex:i,nodeId:active,before,after:JSON.parse(JSON.stringify(e)),description:'Rerouted edge '+before.from+' to '+before.to+' into '+e.from+' to '+e.to})}function deleteEdge(i){let before=model.edges.splice(i,1)[0];change({type:'delete',target:'edge',origin:'user-edit',edgeIndex:i,before,description:'Deleted edge '+before.from+' to '+before.to})}
 
 
 function expectedById(){return Object.fromEntries((model.expectedArchitecture?.nodes||[]).map(n=>[n.id,n]))}
@@ -74,20 +74,20 @@ function edgeDeviation(e){let k=e.from+'->'+e.to;let d=model.deviations?.edges?.
 function validateArchitecture(){let expected=model.expectedArchitecture;if(!expected||!Array.isArray(expected.nodes)){alert('No expectedArchitecture baseline found in model. Add model.expectedArchitecture first.');return}let actual=Object.fromEntries((model.nodes||[]).filter(n=>!n._deleted).map(n=>[n.id,n]));let exp=Object.fromEntries((expected.nodes||[]).map(n=>[n.id,n]));let dev={nodes:{},edges:{},summary:{}};Object.keys(exp).forEach(id=>{if(!actual[id])dev.nodes[id]={status:'red',message:'Expected node missing in rendered architecture.'};else{let dif=[];if(exp[id].type&&actual[id].type!==exp[id].type)dif.push('type expected '+exp[id].type+' but got '+actual[id].type);let eApis=(exp[id].detail?.apis||[]).map(a=>String(a.method||'GET').toUpperCase()+' '+String(a.path||''));let aApis=(actual[id].detail?.apis||[]).map(a=>String(a.method||'GET').toUpperCase()+' '+String(a.path||''));eApis.forEach(ep=>{if(!aApis.includes(ep))dif.push('missing endpoint '+ep)});if(dif.length)dev.nodes[id]={status:'red',message:dif.join('; ')}}});Object.keys(actual).forEach(id=>{if(!exp[id])dev.nodes[id]={status:'red',message:'Unexpected node exists in rendered architecture.'}});let expEdges=new Set((expected.edges||[]).map(e=>e.from+'->'+e.to));let actEdges=new Set((model.edges||[]).map(e=>e.from+'->'+e.to));expEdges.forEach(k=>{if(!actEdges.has(k))dev.edges[k]={status:'red',message:'Expected edge missing: '+k}});actEdges.forEach(k=>{if(!expEdges.has(k))dev.edges[k]={status:'red',message:'Unexpected edge exists: '+k}});let total=Object.keys(dev.nodes).length+Object.keys(dev.edges).length;dev.summary={status:total?'red':'green',deviationCount:total,message:total?'Architecture deviations found: '+total:'No deviations found'};model.deviations=dev;change({type:'validate',target:'architecture',after:dev,description:'Validated expected architecture vs rendered architecture'});alert(dev.summary.message)}
 function deviationBrief(){let d=model.deviations||{},n=d.nodes||{},e=d.edges||{};let rows=[];Object.entries(n).forEach(([id,v])=>rows.push(`- Node ${id}: ${v.message}`));Object.entries(e).forEach(([id,v])=>rows.push(`- Edge ${id}: ${v.message}`));if(!rows.length)return '# Development Brief: No Deviations
 
-No deviations available.';return `# Development Brief: Architekturabweichungen
+No deviations available.';return `# Development Brief: Architecture Deviations
 
-## Zusammenfassung
+## Summary
 ${d.summary?.message||''}
 
-## Abweichungen
+## Deviations
 ${rows.join('\n')}
 
-## Umsetzungsauftrag
-- Behebe jede Abweichung exakt an der genannten Node/Edge.
+## Implementation Order
+- Fix each deviation exactly at the referenced node/edge.
 - Ergänze oder korrigiere fehlende Endpunkte/Verbindungen.
 - Führe erneut VALIDATE ARCH aus, bis keine Abweichung mehr rot ist.
 
-## Akzeptanzkriterien
+## Acceptance Criteria
 - [ ] Alle roten Abweichungen sind behoben.
 - [ ] Validation meldet "No deviations found".`}
 function exportDeviationBrief(){fileName='deviation-dev-brief.md';openModal('Deviation Development Brief',deviationBrief())}
@@ -99,6 +99,113 @@ function draftDeviationForNode(id){let d=nodeDeviation(id);if(!d){alert('No devi
 ## Required Fix
 - Update implementation and architecture data so expected and rendered architecture match for this node.`)}
 
+
+function hasSessionUserChanges(){return (model.changes||[]).some(c=>c.origin==='user-edit')}
+function currentDevBriefId(){return model.project?.activeDevBriefId||'default-brief'}
+function hasAutoImproveForBrief(){let briefId=currentDevBriefId(),ai=model.autoImprove||{};let pendingSameBrief=ai.pending&&ai.pending.devBriefId===briefId;let historySameBrief=(ai.history||[]).some(h=>h.devBriefId===briefId);return {blocked:Boolean(pendingSameBrief||historySameBrief),briefId,pendingSameBrief,historySameBrief}}
+function inferGoalStatement(){let p=model.project||{};if(p.goal)return p.goal;let constraints=(model.nodes||[]).flatMap(n=>n.detail?.constraints||[]).slice(0,2);return p.description||constraints.join(' ')||'Improve delivery toward architecture goals with low-to-medium effort and high impact.'}
+function evaluateAutoImprove(){
+  if(hasSessionUserChanges())return {allowed:false,reason:'Auto-improve is locked because this session already contains user-requested architecture changes.'};
+  let briefGuard=hasAutoImproveForBrief();
+  if(briefGuard.blocked){
+    let detail=briefGuard.pendingSameBrief?'pending proposal already exists':'proposal already confirmed in history';
+    return {allowed:false,reason:'Auto-improve can only be triggered once per dev brief. Blocked for devBriefId: '+briefGuard.briefId+' ('+detail+').'};
+  }
+  let nodes=(model.nodes||[]).filter(n=>!n._deleted),edges=(model.edges||[]),apis=nodes.flatMap(n=>n.detail?.apis||[]),deviationCount=Object.keys(model.deviations?.nodes||{}).length+Object.keys(model.deviations?.edges||{}).length;
+  let risks=[];
+  if(!apis.length)risks.push('Low observability of API contracts in architecture data');
+  if(!model.health)risks.push('No recent runtime health signal present');
+  if(deviationCount>0)risks.push('Known architecture deviations may conflict with new improvements');
+  let suggestion={
+    id:'ai-'+Math.random().toString(36).slice(2,9),
+    createdAt:now(),
+    title:'Architecture Guardrail Pipeline',
+    summary:'Introduce a CI guardrail that runs architecture validation + flow extraction on each PR and fails on red deviations.',
+    rationale:'Small-to-medium implementation effort with strong leverage: protects strategic architecture drift, improves maintainability, and keeps changes aligned with goals.',
+    impact:'Expected impact: high alignment and reduced regression risk across future changes.',
+    effort:'medium',
+    goal:inferGoalStatement(),
+    scope:['Add non-interactive validator command', 'Persist expectedArchitecture baseline', 'Publish deviation report artifact in CI'],
+    riskAssessment:{level:deviationCount>0?'high':'medium',items:risks},
+    mitigations:[
+      'Start with warning mode for first rollout window',
+      'Require explicit baseline update in same PR for intentional architecture changes',
+      'Add ownership for false-positive triage and weekly review'
+    ],
+    dependencies:['Architecture JSON baseline in repository', 'CI runtime with Python 3'],
+    successMetrics:['Deviation count trend decreases', 'PRs with unreviewed architecture drift reduced', 'Mean time to detect architecture regressions reduced']
+  };
+  return {allowed:true,suggestion};
+}
+function triggerAutoImprove(){
+  let result=evaluateAutoImprove();
+  if(!result.allowed){alert(result.reason);return}
+  let ai=model.autoImprove=model.autoImprove||{history:[]};
+  let briefId=currentDevBriefId();
+  let suggestion=result.suggestion;
+  suggestion.devBriefId=briefId;
+  suggestion.status='proposed';
+  ai.pending=suggestion;
+  change({type:'auto-improve-proposed',target:'strategy',origin:'system',after:suggestion,description:'Auto-improve proposal generated: '+suggestion.title});
+  openModal('Auto-Improve Proposal',formatAutoImproveProposal(suggestion));
+}
+function confirmAutoImprove(){
+  let ai=model.autoImprove||{}; if(!ai.pending){alert('No auto-improve proposal to confirm.');return}
+  let confirmed={...ai.pending,devBriefId:ai.pending.devBriefId||currentDevBriefId(),status:'confirmed',confirmedAt:now()};
+  ai.history=ai.history||[]; ai.history.push(confirmed); delete ai.pending;
+  model.devBriefs=model.devBriefs||[];
+  model.devBriefs.push({id:'brief-'+Math.random().toString(36).slice(2,8),createdAt:now(),source:'auto-improve',title:confirmed.title,content:formatAutoImproveDevBrief(confirmed)});
+  change({type:'auto-improve-confirmed',target:'dev-brief',origin:'system',after:confirmed,description:'Auto-improve confirmed and converted to development brief'});
+  openModal('Auto-Improve Dev Brief',formatAutoImproveDevBrief(confirmed));
+}
+function formatAutoImproveProposal(s){return `# Auto-Improve Proposal
+
+## Title
+${s.title}
+
+## Strategic Goal Context
+${s.goal}
+
+## Why this is impactful
+${s.rationale}
+
+## Effort
+${s.effort}
+
+## Suggested Scope
+${s.scope.map(x=>'- '+x).join('\n')}
+
+## Risk Assessment
+- Level: ${s.riskAssessment.level}
+${(s.riskAssessment.items||[]).map(x=>'- '+x).join('\n')||'- No critical risks identified'}
+
+## Mitigations
+${s.mitigations.map(x=>'- '+x).join('\n')}
+
+## Success Metrics
+${s.successMetrics.map(x=>'- '+x).join('\n')}
+`}
+function formatAutoImproveDevBrief(s){return `# Development Brief: Auto-Improve
+
+## Selected Improvement
+- Title: ${s.title}
+- Confirmed At: ${s.confirmedAt||now()}
+- Dev Brief Context: ${s.devBriefId}
+
+## Strategic Intent
+${s.goal}
+
+## Implementation Plan
+${s.scope.map((x,i)=>`${i+1}. ${x}`).join('\n')}
+
+## Risk & Contradiction Controls
+${s.mitigations.map(x=>'- '+x).join('\n')}
+
+## Required Architectural Consistency Checks
+- Validate against expectedArchitecture baseline before merge.
+- Evaluate every follow-up architecture change for contradiction, risk, and synergy against this improvement.
+- Reject impulsive short-term-only changes without strategic fit rationale.
+`}
 function statusRank(s){return ({red:3,yellow:2,green:1,unknown:0})[s]||0}
 function worstStatus(list){let w='unknown';(list||[]).forEach(x=>{let s=String(x?.status||'unknown').toLowerCase();if(statusRank(s)>statusRank(w))w=s});return w}
 function nodeHealth(id){let h=model.health?.nodes?.[id]||{};let endpoints=Array.isArray(h.endpoints)?h.endpoints:[];let status=(h.status||worstStatus(endpoints)||'unknown').toLowerCase();return {status:['red','yellow','green','unknown'].includes(status)?status:'unknown',summary:h.summary||h.message||''}}
