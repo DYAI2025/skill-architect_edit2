@@ -107,12 +107,12 @@ Two new buttons in the generated editor:
 Auto-Improve can run only when:
 
 1. **No user-requested changes** have already been made in the current session (`origin: "user-edit"` lock), and
-2. **No prior Auto-Improve** has been triggered for the active dev brief context.
+2. **No prior Auto-Improve** exists for the active dev brief context (neither as pending proposal nor as confirmed history).
 
 This enforces:
 
 - low contradiction risk against manually requested changes,
-- one strategic recommendation per brief,
+- one strategic recommendation per brief (strictly enforced across pending + history),
 - traceable proposal lifecycle.
 
 ### Auto-Improve Output
@@ -159,6 +159,8 @@ When confirmed, a structured auto-improve dev brief is created and added to `mod
 1. **Session-aware edit origin tagging** added to structural edit change events.
 2. **Deviation brief text consistency** improved (English headings/instructions).
 3. **Strategic workflow coverage** expanded with proposal + confirmation lifecycle.
+4. **One-trigger guard strengthened** so Auto-Improve is blocked when either a pending proposal or a confirmed history entry exists for the same `devBriefId`.
+5. **Operator-facing block message improved** to include the concrete `devBriefId` and blocking reason.
 
 ## 7) Local Validation Steps
 

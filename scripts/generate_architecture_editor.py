@@ -101,11 +101,16 @@ function draftDeviationForNode(id){let d=nodeDeviation(id);if(!d){alert('No devi
 
 
 function hasSessionUserChanges(){return (model.changes||[]).some(c=>c.origin==='user-edit')}
-function hasAutoImproveForBrief(){let briefId=model.project?.activeDevBriefId||'default-brief';return (model.autoImprove?.history||[]).some(h=>h.devBriefId===briefId)}
+function currentDevBriefId(){return model.project?.activeDevBriefId||'default-brief'}
+function hasAutoImproveForBrief(){let briefId=currentDevBriefId(),ai=model.autoImprove||{};let pendingSameBrief=ai.pending&&ai.pending.devBriefId===briefId;let historySameBrief=(ai.history||[]).some(h=>h.devBriefId===briefId);return {blocked:Boolean(pendingSameBrief||historySameBrief),briefId,pendingSameBrief,historySameBrief}}
 function inferGoalStatement(){let p=model.project||{};if(p.goal)return p.goal;let constraints=(model.nodes||[]).flatMap(n=>n.detail?.constraints||[]).slice(0,2);return p.description||constraints.join(' ')||'Improve delivery toward architecture goals with low-to-medium effort and high impact.'}
 function evaluateAutoImprove(){
   if(hasSessionUserChanges())return {allowed:false,reason:'Auto-improve is locked because this session already contains user-requested architecture changes.'};
-  if(hasAutoImproveForBrief())return {allowed:false,reason:'Auto-improve can only be triggered once per dev brief.'};
+  let briefGuard=hasAutoImproveForBrief();
+  if(briefGuard.blocked){
+    let detail=briefGuard.pendingSameBrief?'pending proposal already exists':'proposal already confirmed in history';
+    return {allowed:false,reason:'Auto-improve can only be triggered once per dev brief. Blocked for devBriefId: '+briefGuard.briefId+' ('+detail+').'};
+  }
   let nodes=(model.nodes||[]).filter(n=>!n._deleted),edges=(model.edges||[]),apis=nodes.flatMap(n=>n.detail?.apis||[]),deviationCount=Object.keys(model.deviations?.nodes||{}).length+Object.keys(model.deviations?.edges||{}).length;
   let risks=[];
   if(!apis.length)risks.push('Low observability of API contracts in architecture data');
@@ -136,7 +141,7 @@ function triggerAutoImprove(){
   let result=evaluateAutoImprove();
   if(!result.allowed){alert(result.reason);return}
   let ai=model.autoImprove=model.autoImprove||{history:[]};
-  let briefId=model.project?.activeDevBriefId||'default-brief';
+  let briefId=currentDevBriefId();
   let suggestion=result.suggestion;
   suggestion.devBriefId=briefId;
   suggestion.status='proposed';
@@ -146,7 +151,7 @@ function triggerAutoImprove(){
 }
 function confirmAutoImprove(){
   let ai=model.autoImprove||{}; if(!ai.pending){alert('No auto-improve proposal to confirm.');return}
-  let confirmed={...ai.pending,status:'confirmed',confirmedAt:now()};
+  let confirmed={...ai.pending,devBriefId:ai.pending.devBriefId||currentDevBriefId(),status:'confirmed',confirmedAt:now()};
   ai.history=ai.history||[]; ai.history.push(confirmed); delete ai.pending;
   model.devBriefs=model.devBriefs||[];
   model.devBriefs.push({id:'brief-'+Math.random().toString(36).slice(2,8),createdAt:now(),source:'auto-improve',title:confirmed.title,content:formatAutoImproveDevBrief(confirmed)});
