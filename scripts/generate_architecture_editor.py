@@ -102,7 +102,7 @@ function draftDeviationForNode(id){let d=nodeDeviation(id);if(!d){alert('No devi
 
 function hasSessionUserChanges(){return (model.changes||[]).some(c=>c.origin==='user-edit')}
 function currentDevBriefId(){return model.project?.activeDevBriefId||'default-brief'}
-function hasAutoImproveForBrief(){let briefId=currentDevBriefId(),ai=model.autoImprove||{};let pendingSameBrief=ai.pending&&ai.pending.devBriefId===briefId;let historySameBrief=(ai.history||[]).some(h=>h.devBriefId===briefId);return {blocked:Boolean(pendingSameBrief||historySameBrief),briefId,pendingSameBrief,historySameBrief}}
+function hasAutoImproveForBrief(){let briefId=currentDevBriefId(),ai=model.autoImprove||{};let pendingBriefId=ai.pending?(ai.pending.devBriefId||briefId):null;let pendingSameBrief=Boolean(ai.pending)&&pendingBriefId===briefId;let historySameBrief=(ai.history||[]).some(h=>h.devBriefId===briefId);return {blocked:Boolean(pendingSameBrief||historySameBrief),briefId,pendingSameBrief,historySameBrief}}
 function inferGoalStatement(){let p=model.project||{};if(p.goal)return p.goal;let constraints=(model.nodes||[]).flatMap(n=>n.detail?.constraints||[]).slice(0,2);return p.description||constraints.join(' ')||'Improve delivery toward architecture goals with low-to-medium effort and high impact.'}
 function evaluateAutoImprove(){
   if(hasSessionUserChanges())return {allowed:false,reason:'Auto-improve is locked because this session already contains user-requested architecture changes.'};
