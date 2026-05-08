@@ -149,6 +149,12 @@ function normalizeForSignature(value){
   }
   return value;
 }
+function userEditCount(){return (model.changes||[]).filter(c=>c.origin==='user-edit').length}
+function legacyArchitectureSignature(){
+  let nodes=(model.nodes||[]).filter(n=>!n._deleted).map(n=>n.id).sort();
+  let edges=(model.edges||[]).map(e=>e.from+'->'+e.to).sort();
+  return JSON.stringify({nodes,edges,userChanges:userEditCount()});
+}
 function architectureSignature(){
   let nodes=(model.nodes||[])
     .filter(n=>!n._deleted)
@@ -161,8 +167,13 @@ function architectureSignature(){
       let bk=JSON.stringify(b);
       return ak.localeCompare(bk);
     });
-  let userChanges=(model.changes||[]).filter(c=>c.origin==='user-edit').length;
-  return JSON.stringify({nodes,edges,userChanges});
+  return JSON.stringify({nodes,edges,userChanges:userEditCount()});
+}
+function proposalSignatureMatches(guard){
+  let signatureAtProposal=guard?.signatureAtProposal;
+  if(!signatureAtProposal)return true;
+  if(guard.signatureVersion===2)return signatureAtProposal===architectureSignature();
+  return signatureAtProposal===architectureSignature()||signatureAtProposal===legacyArchitectureSignature();
 }
 function triggerAutoImprove(){
   let result=evaluateAutoImprove();
@@ -172,7 +183,7 @@ function triggerAutoImprove(){
   let suggestion=result.suggestion;
   suggestion.devBriefId=briefId;
   suggestion.status='proposed';
-  suggestion.guard={signatureAtProposal:architectureSignature(),userChangeCountAtProposal:(model.changes||[]).filter(c=>c.origin==='user-edit').length};
+  suggestion.guard={signatureAtProposal:architectureSignature(),signatureVersion:2,userChangeCountAtProposal:userEditCount()};
   ai.pending=suggestion;
   change({type:'auto-improve-proposed',target:'strategy',origin:'system',after:suggestion,description:'Auto-improve proposal generated: '+suggestion.title});
   openModal('Auto-Improve Proposal',formatAutoImproveProposal(suggestion));
@@ -180,8 +191,7 @@ function triggerAutoImprove(){
 function confirmAutoImprove(){
   let ai=model.autoImprove||{}; if(!ai.pending){alert('No auto-improve proposal to confirm.');return}
   let pending=ai.pending;
-  let nowSignature=architectureSignature();
-  if(pending.guard&&pending.guard.signatureAtProposal!==nowSignature){
+  if(pending.guard&&!proposalSignatureMatches(pending.guard)){
     alert('Confirmation blocked: architecture changed after proposal creation. Re-run AUTO-IMPROVE to avoid contradictions.');
     return;
   }
